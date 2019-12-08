@@ -4,8 +4,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 
 from definitions import MOCKS_DIR
-from src.main.mock_recording import Interaction
-from src.main.mock_service import SimpleMarkdownParser
+from src.main.servirtium_recording import Interaction
+from src.main.servirtium_service import SimpleMarkdownParser
 
 
 class InteractionRecording:

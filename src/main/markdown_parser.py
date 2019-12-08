@@ -1,6 +1,6 @@
 import os
 
-from src.main.mock_recording import MockRecording, Interaction
+from src.main.servirtium_recording import MockRecording, Interaction
 
 
 class SimpleMarkdownParser:

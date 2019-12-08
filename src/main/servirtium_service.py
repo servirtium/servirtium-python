@@ -3,7 +3,7 @@ from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from src.main.markdown_parser import SimpleMarkdownParser
-from src.main.mock_recording import Interaction
+from src.main.servirtium_recording import Interaction
 
 
 class MockServiceHttpHandler(BaseHTTPRequestHandler):
