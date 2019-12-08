@@ -2,6 +2,8 @@ import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import requests
+
+from definitions import MOCKS_DIR
 from src.main.mock_recording import Interaction
 from src.main.mock_service import SimpleMarkdownParser
 
@@ -66,7 +68,6 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
         RecorderHttpHandler.current_recording = InteractionRecording()
 
     def do_GET(self):
-
         req_headers = self.headers
         replace_values = {'User-Agent': 'Servirtium-Testing', 'Host': self.host.replace('http://', '')}
 
@@ -81,6 +82,7 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
        #     request_body = str(self.rfile.read(self.headers['content-length']), encoding='utf-8')
 
         test_file = SimpleMarkdownParser.get_recording_from_name(RecorderHttpHandler.invoking_method, mock_recordings)
+
         response = requests.get(RecorderHttpHandler.host + self.path, headers=req_headers)
 
         self.send_response(response.status_code)
@@ -92,7 +94,7 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
                                                                           response_code=response.status_code))
 
         if len(RecorderHttpHandler.current_recording.interactions) == len(test_file.interactions):  # Last interaction
-            f = open(RecorderHttpHandler.invoking_method.replace("test", 'rec') + ".md", "w+")
+            f = open(MOCKS_DIR + RecorderHttpHandler.invoking_method.replace("test_", '') + ".md", "w+")
             f.write(RecorderHttpHandler.current_recording.to_markdown_string())
             f.close()
 
