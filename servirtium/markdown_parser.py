@@ -1,18 +1,19 @@
 import os
 
-from src.main.servirtium_recording import MockRecording, Interaction
+from servirtium.servirtium_recording import MockRecording, Interaction
 
 
 class SimpleMarkdownParser:
 
-    @staticmethod
-    def get_recording_from_name(method_name: str, mock_recordings: [MockRecording]) -> MockRecording:
-        recordings = list(filter(lambda mock: mock.file_name.replace('.md', '') in method_name, mock_recordings))
+    markdown_files = []
+    recordings = []
+
+    def get_recording_from_method_name(self, method_name: str) -> MockRecording:
+        recordings = list(filter(lambda mock: mock.file_name.replace('.md', '') in method_name, self.recordings))
         return recordings[0] if len(recordings) > 0 else None
 
-    @staticmethod
-    def is_valid_path(path, mock_recordings: [MockRecording]) -> bool:
-        return bool(filter(lambda x: x.path == path, [i.interactions for i in [m for m in mock_recordings]]))
+    def is_valid_path(self, path: [MockRecording]) -> bool:
+        return bool(filter(lambda x: x.path == path, [i.interactions for i in [m for m in self.recordings]]))
 
     @staticmethod
     def get_dict_from_headers_string(headers_string) -> {}:
@@ -25,7 +26,7 @@ class SimpleMarkdownParser:
         return out
 
     @staticmethod
-    def __get_markdown_file_strings(mocks_path) -> [(str, str)]:
+    def get_markdown_file_strings(mocks_path) -> [(str, str)]:
         file_strings = []
 
         for filename in os.listdir(mocks_path):
@@ -35,21 +36,13 @@ class SimpleMarkdownParser:
 
         return file_strings
 
+    def _set_mock_files(self, mock_files: [(str, str)]):
+        for (name, content) in mock_files:
+            SimpleMarkdownParser.markdown_files.append((name, content))
+        self.recordings = [SimpleMarkdownParser.parse_markdown_string(s1, s2) for (s1, s2) in self.markdown_files]
+
     @staticmethod
-    def get_headers_dict(header_string) -> dict:
-        out = {}
-        header_lines = header_string.split('\n')
-
-        for line in header_lines:
-            line_split = [l.strip() for l in line.split(':')]
-            out[line_split[0]] = line_split[1]
-        return out
-
-    def get_recordings(self, mocks_path) -> [MockRecording]:
-        markdown_raw_strings = self.__get_markdown_file_strings(mocks_path)
-        return [self.__parse_markdown_string(s1, s2) for (s1, s2) in markdown_raw_strings]
-
-    def __parse_markdown_string(self, markdown_string, file_name) -> MockRecording:
+    def parse_markdown_string(markdown_string, file_name) -> MockRecording:
 
         interaction_strings = ["## Interaction"+x for x in markdown_string.split("## Interaction") if len(x)]
         recording_interactions = list()
@@ -67,11 +60,11 @@ class SimpleMarkdownParser:
             request_path = interaction_split[len(interaction_split) - 1]
 
             request_headers_string = clean_strings[1].split('```')[1].strip()
-            request_headers = self.get_headers_dict(request_headers_string)
+            request_headers = SimpleMarkdownParser.get_dict_from_headers_string(request_headers_string)
             request_body = clean_strings[2].split('```')[1].strip()
 
             response_headers_string = clean_strings[3].split('```')[1].strip()
-            response_headers = self.get_headers_dict(response_headers_string)
+            response_headers = SimpleMarkdownParser.get_dict_from_headers_string(response_headers_string)
             response_body = clean_strings[4].split('```')[1].strip()
 
             recording_interactions.append(Interaction(request_path=request_path, request_headers=request_headers, request_body=request_body,

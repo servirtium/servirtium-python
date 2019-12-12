@@ -1,11 +1,9 @@
-import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import requests
-
 from definitions import MOCKS_DIR
-from src.main.servirtium_recording import Interaction
-from src.main.servirtium_service import SimpleMarkdownParser
+from servirtium.servirtium_recording import Interaction
+from servirtium.servirtium_service import SimpleMarkdownParser
 
 
 class InteractionRecording:
@@ -78,11 +76,7 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
 
         request_body = "\n"
 
-       # if 'content-length' in [x.lower() for x in self.headers.keys()]:
-       #     request_body = str(self.rfile.read(self.headers['content-length']), encoding='utf-8')
-
-        test_file = SimpleMarkdownParser.get_recording_from_name(RecorderHttpHandler.invoking_method, mock_recordings)
-
+        test_file = parser.get_recording_from_method_name(RecorderHttpHandler.invoking_method)
         response = requests.get(RecorderHttpHandler.host + self.path, headers=req_headers)
 
         self.send_response(response.status_code)
@@ -100,7 +94,11 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
 
 
 parser = SimpleMarkdownParser()
-mock_recordings = parser.get_recordings(os.path.dirname(os.path.realpath(__file__)).replace('main', 'mocks'))
+
+
+def set_markdown_files(markdown_path):
+    files = parser.get_markdown_file_strings(markdown_path)
+    parser._set_mock_files(files)
 
 
 def set_real_host(host):

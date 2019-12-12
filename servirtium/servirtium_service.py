@@ -2,8 +2,8 @@ import os
 from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from src.main.markdown_parser import SimpleMarkdownParser
-from src.main.servirtium_recording import Interaction
+from servirtium.markdown_parser import SimpleMarkdownParser
+from servirtium.servirtium_recording import Interaction
 
 
 class MockServiceHttpHandler(BaseHTTPRequestHandler):
@@ -18,9 +18,9 @@ class MockServiceHttpHandler(BaseHTTPRequestHandler):
         MockServiceHttpHandler.invoking_method = method_name
 
     def do_GET(self):
-        test_file = SimpleMarkdownParser.get_recording_from_name(MockServiceHttpHandler.invoking_method, mock_recordings)
+        test_file = parser.get_recording_from_method_name(MockServiceHttpHandler.invoking_method)
 
-        if SimpleMarkdownParser.is_valid_path(self.path, mock_recordings) and test_file:
+        if parser.is_valid_path(self.path) and test_file:
             interaction = self.get_interaction_from_path(self.path, test_file.interactions)
             request_headers = SimpleMarkdownParser.get_dict_from_headers_string(str(self.headers).strip())
 
@@ -41,7 +41,11 @@ class MockServiceHttpHandler(BaseHTTPRequestHandler):
 
 
 parser = SimpleMarkdownParser()
-mock_recordings = parser.get_recordings(os.path.dirname(os.path.realpath(__file__)).replace('main', 'mocks'))
+
+
+def set_markdown_files(markdown_path):
+    files = parser.get_markdown_file_strings(markdown_path)
+    parser._set_mock_files(files)
 
 
 def start():
