@@ -1,3 +1,4 @@
+import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import requests
@@ -55,8 +56,20 @@ class InteractionRecording:
         return '\n\n'.join(lines)
 
 
+def hdr_replacements(headers, replacements):
+    new_headers = {}
+    for k, v in headers.items():
+        if k in replacements.keys():
+            new_headers[k] = replacements[k]
+        else:
+            new_headers[k] = v
+
+    return new_headers
+
+
 class RecorderHttpHandler(BaseHTTPRequestHandler):
     host = "default_host"
+    replace_request_headers_in_recording = {}
     invoking_method = 'default_method'
     current_recording = InteractionRecording()
 
@@ -67,25 +80,28 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         req_headers = self.headers
-        replace_values = {'User-Agent': 'Servirtium-Testing', 'Host': self.host.replace('http://', '')}
+        new_req_headers = {}
 
+        replace_values = {'Host': self.host.replace('http://', '')}
         for k, v in req_headers.items():
             if k in replace_values.keys():
-                del(req_headers[k])
-                req_headers[k] = replace_values[k]
+                new_req_headers[k] = replace_values[k]
+            else:
+                new_req_headers[k] = v
 
         request_body = "\n"
 
         test_file = parser.get_recording_from_method_name(RecorderHttpHandler.invoking_method)
-        response = requests.get(RecorderHttpHandler.host + self.path, headers=req_headers)
+        response = requests.get(RecorderHttpHandler.host + self.path, headers=new_req_headers)
 
         self.send_response(response.status_code)
         self.end_headers()
         self.wfile.write(response.content)
 
-        RecorderHttpHandler.current_recording.add_interaction(Interaction(request_headers=req_headers, request_body=request_body, request_path=self.path,
-                                                                          response_headers=response.headers, response_body=(str(response.content, encoding='utf-8')),
-                                                                          response_code=response.status_code))
+        RecorderHttpHandler.current_recording.add_interaction(
+            Interaction(request_headers=hdr_replacements(new_req_headers, RecorderHttpHandler.replace_request_headers_in_recording),
+                        request_body=request_body, request_path=self.path, response_headers=response.headers,
+                        response_body=(str(response.content, encoding='utf-8')), response_code=response.status_code))
 
         if len(RecorderHttpHandler.current_recording.interactions) == len(test_file.interactions):  # Last interaction
             f = open(MOCKS_DIR + RecorderHttpHandler.invoking_method.replace("test_", '') + ".md", "w+")
@@ -103,6 +119,10 @@ def set_markdown_files(markdown_path):
 
 def set_real_host(host):
     RecorderHttpHandler.host = host
+
+
+def set_request_header_replacements(replacements):
+    RecorderHttpHandler.replace_request_headers_in_recording = replacements
 
 
 def start():
