@@ -6,3 +6,5 @@
 .idea/workspace.xml
 
 servirtium.egg-info/
+
+__pycache__
