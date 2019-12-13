@@ -67,9 +67,23 @@ def hdr_replacements(headers, replacements):
     return new_headers
 
 
+def hdr_removals(headers, removals):
+    new_headers = {}
+    for k, v in headers.items():
+        should_remove = False
+        one_line = k + ": " + v
+        for rmv in removals:
+            if one_line.startswith(rmv):
+                should_remove = True
+        if not should_remove:
+            new_headers[k] = v
+    return new_headers
+
+
 class RecorderHttpHandler(BaseHTTPRequestHandler):
     host = "default_host"
     replace_request_headers_in_recording = {}
+    remove_response_headers_in_recording = []
     invoking_method = 'default_method'
     current_recording = InteractionRecording()
 
@@ -100,7 +114,8 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
 
         RecorderHttpHandler.current_recording.add_interaction(
             Interaction(request_headers=hdr_replacements(new_req_headers, RecorderHttpHandler.replace_request_headers_in_recording),
-                        request_body=request_body, request_path=self.path, response_headers=response.headers,
+                        request_body=request_body, request_path=self.path,
+                        response_headers=hdr_removals(response.headers, RecorderHttpHandler.remove_response_headers_in_recording),
                         response_body=(str(response.content, encoding='utf-8')), response_code=response.status_code))
 
         if len(RecorderHttpHandler.current_recording.interactions) == len(test_file.interactions):  # Last interaction
@@ -123,6 +138,10 @@ def set_real_host(host):
 
 def set_request_header_replacements(replacements):
     RecorderHttpHandler.replace_request_headers_in_recording = replacements
+
+
+def set_response_header_removals(removals):
+    RecorderHttpHandler.remove_response_headers_in_recording = removals
 
 
 def start():
