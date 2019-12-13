@@ -2,8 +2,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import requests
 from definitions import MOCKS_DIR
-from servirtium.servirtium_recording import Interaction
-from servirtium.servirtium_service import SimpleMarkdownParser
+from servirtium.interactions import Interaction
+from servirtium.playback import SimpleMarkdownParser
 
 
 class InteractionRecording:

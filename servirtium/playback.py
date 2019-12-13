@@ -3,7 +3,7 @@ from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from servirtium.markdown_parser import SimpleMarkdownParser
-from servirtium.servirtium_recording import Interaction
+from servirtium.interactions import Interaction
 
 
 class MockServiceHttpHandler(BaseHTTPRequestHandler):
