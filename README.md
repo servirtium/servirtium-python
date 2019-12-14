@@ -10,5 +10,8 @@ Execute the following commands to install the package locally:
 
 ```
 cd servirtium-python
-pip install -e .
+pip3 install -e .
 ```
+
+The https://github.com/servirtium/demo-python-climate-data-tck demo needs you to have built the Python Servirtium 
+first as it is unpublished in pip-land.
