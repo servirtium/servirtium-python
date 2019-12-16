@@ -31,10 +31,15 @@ class SimpleMarkdownParser:
 
         for filename in os.listdir(mocks_path):
             file_path = os.path.join(mocks_path, filename)
-            file = open(file_path, "r")
-            file_strings.append((file.read(), filename))
+            file_strings.append(((SimpleMarkdownParser.get_file_content(file_path)), filename))
 
         return file_strings
+
+    @staticmethod
+    def get_file_content(file_path):
+        file = open(file_path, "r")
+        content = file.read()
+        return content
 
     def _set_mock_files(self, mock_files: [(str, str)]):
         for (name, content) in mock_files:
