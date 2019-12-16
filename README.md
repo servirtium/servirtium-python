@@ -12,7 +12,7 @@ Working so far:
 
 Not Working yet:
 
-* Any support f****or POST, PUT etc.
+* Any support for POST, PUT etc.
 
 Help needed from Pythonistas!
 
