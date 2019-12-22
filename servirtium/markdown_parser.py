@@ -87,22 +87,28 @@ class SimpleMarkdownParser:
 
             for string in raw_strings:
                 if len(string):
-                    clean_strings.append(string.strip().replace('#', ''))
+                    clean_strings.append(string)
 
             interaction_description = clean_strings[0]
             interaction_split = interaction_description.split(' ')
-            request_path = interaction_split[len(interaction_split) - 1]
+            request_path = interaction_split[len(interaction_split) - 1].strip()
 
-            request_headers_string = clean_strings[1].split('```')[1].strip()
+            assert clean_strings[1].startswith("# Request headers recorded for playback:")
+            split = clean_strings[1].split('\n```\n')
+            request_headers_string = split[1].strip()
             request_headers = SimpleMarkdownParser.get_dict_from_headers_string(request_headers_string)
-            request_body = clean_strings[2].split('```')[1].strip()
 
-            response_headers_string = clean_strings[3].split('```')[1].strip()
+            assert clean_strings[2].startswith("# Request body recorded for playback (")
+            request_body = clean_strings[2].split('\n```\n')[1].strip()
+
+            assert clean_strings[3].startswith("# Response headers recorded for playback:")
+            response_headers_string = clean_strings[3].split('\n```\n')[1].strip()
             response_headers = SimpleMarkdownParser.get_dict_from_headers_string(response_headers_string)
 
+            assert clean_strings[4].startswith("# Response body recorded for playback (")
             resp_body_chunk = clean_strings[4]
-            response_code = resp_body_chunk.split('```')[0].split("(")[1].split(":")[0]
-            response_body = resp_body_chunk.split('```')[1].strip()
+            response_code = resp_body_chunk.split('\n```\n')[0].split("(")[1].split(":")[0]
+            response_body = resp_body_chunk.split('\n```\n')[1].strip()
 
             i = Interaction(request_path=request_path,
                             request_headers=request_headers, request_body=request_body,
