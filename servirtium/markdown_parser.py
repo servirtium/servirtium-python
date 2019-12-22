@@ -78,7 +78,7 @@ class SimpleMarkdownParser:
     @staticmethod
     def parse_markdown_string(markdown_string, file_name) -> MockRecording:
 
-        interaction_strings = ["## Interaction"+x for x in markdown_string.split("## Interaction") if len(x)]
+        interaction_strings = ["## Interaction" + x for x in markdown_string.split("## Interaction") if len(x)]
         recording_interactions = list()
 
         for interaction in interaction_strings:
@@ -99,9 +99,15 @@ class SimpleMarkdownParser:
 
             response_headers_string = clean_strings[3].split('```')[1].strip()
             response_headers = SimpleMarkdownParser.get_dict_from_headers_string(response_headers_string)
-            response_body = clean_strings[4].split('```')[1].strip()
 
-            recording_interactions.append(Interaction(request_path=request_path, request_headers=request_headers, request_body=request_body,
-                             response_headers=response_headers, response_body=response_body))
+            resp_body_chunk = clean_strings[4]
+            response_code = resp_body_chunk.split('```')[0].split("(")[1].split(":")[0]
+            response_body = resp_body_chunk.split('```')[1].strip()
+
+            i = Interaction(request_path=request_path,
+                            request_headers=request_headers, request_body=request_body,
+                            response_headers=response_headers, response_body=response_body,
+                            response_code=response_code)
+            recording_interactions.append(i)
 
         return MockRecording(file_name=file_name, interactions=recording_interactions)

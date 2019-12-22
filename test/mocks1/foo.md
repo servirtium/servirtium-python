@@ -47,7 +47,7 @@ Content-Type: nursery/rhyme
 The_lamb: was sure to go ;
 ```
 
-### Response body recorded for playback (200: mime/type):
+### Response body recorded for playback (201: mime/type):
 
 ```
 He followed her to school one day—

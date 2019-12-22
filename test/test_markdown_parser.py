@@ -16,6 +16,7 @@ def test_good_markdown_means_recording():
     files = parser.get_markdown_file_strings("./test/mocks1")
     parser._set_mock_files(files)
     recording = parser.get_recording_from_method_name("foo")
+
     assert recording is not None
     assert len(recording.interactions) is 2
 
@@ -25,7 +26,7 @@ def test_good_markdown_means_recording():
     assert i.request_body == "abc123"
 
     assert i.response_type == "text/plain"
-    assert i.response_code == ""
+    assert i.response_code == "200"
     assert str(i.response_headers) == "{'Content-Type': 'text/plain', 'Header-X': 'abc-123'}"
     assert i.response_body == "Mary had a little lamb"
 
@@ -35,6 +36,6 @@ def test_good_markdown_means_recording():
     assert i.request_body == "And every where that Mary went"
 
     assert i.response_type == "nursery/rhyme"
-    assert i.response_code == ""
+    assert i.response_code == "201"
     assert str(i.response_headers) == "{'Content-Type': 'nursery/rhyme', 'The_lamb': 'was sure to go ;'}"
     assert i.response_body == "He followed her to school one day—"
