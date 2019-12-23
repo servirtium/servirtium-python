@@ -47,7 +47,7 @@ class InteractionRecording:
 
     @staticmethod
     def get_interaction_string_title(interaction: Interaction, interactions: [Interaction]) -> str:
-        return f'## Interaction {interactions.index(interaction)}: GET {interaction.path}\n'
+        return f'## Interaction {interactions.index(interaction)}: {interaction.http_verb} {interaction.path}\n'
 
     @staticmethod
     def wrap_string(i_string: str):

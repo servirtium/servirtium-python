@@ -79,6 +79,9 @@ class SimpleMarkdownParser:
         recording_interactions = list()
 
         for interaction in interaction_strings:
+
+            http_verb = interaction.split("\n")[0].split(" ")[3]
+
             raw_strings = interaction.split("##")
             clean_strings = []
 
@@ -114,7 +117,7 @@ class SimpleMarkdownParser:
             i = Interaction(request_path=request_path,
                             request_headers=request_headers, request_body=request_body,
                             response_headers=response_headers, response_body=response_body,
-                            response_code=response_code)
+                            response_code=response_code, http_verb=http_verb)
             recording_interactions.append(i)
 
         return MockRecording(file_name=file_name, interactions=recording_interactions)

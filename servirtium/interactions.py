@@ -31,7 +31,8 @@
 class Interaction:
 
     def __init__(self, request_path, request_headers: {}, response_headers: {},
-                 request_body='', response_body='', response_code=''):
+                 request_body='', response_body='', response_code='', http_verb=''):
+        self.http_verb = http_verb
         self.path = request_path
         self.request_body = request_body
         self.request_headers = request_headers
