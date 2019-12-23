@@ -1,4 +1,6 @@
 import json
+import sys
+
 import pytest
 from unittest.mock import patch
 
@@ -6,12 +8,107 @@ from markdown_parser import SimpleMarkdownParser
 
 
 @patch('markdown_parser.SimpleMarkdownParser.get_file_content')
-def test_bad_markdown_means_no_recordings(mock_get_file_content):
+def qqtest_bad_markdown_means_no_recordings(mock_get_file_content):
     mock_get_file_content.return_value = 'abc 123'
     recording = SimpleMarkdownParser().get_recording_from_method_name("foo")
     assert recording is None\
 
-def test_good_markdown_means_recording():
+def test_corrupt_request_headers_in_markdown_yields_error():
+    parser = SimpleMarkdownParser()
+    try:
+        parser.parse_markdown_string("", """## Interaction 0: GET /path/to/resource
+
+### XXXXXXXX recorded for playback:
+
+nothing else important to test
+
+""")
+        pytest.fail()
+    except AssertionError:
+        assert "Servirtium request headers line missing from markdown" in str(sys.exc_info()[1])
+
+def test_corrupt_request_body_in_markdown_yields_error():
+    parser = SimpleMarkdownParser()
+    try:
+        parser.parse_markdown_string("", """## Interaction 0: GET /path/to/resource
+
+### Request headers recorded for playback:
+
+```
+a: b
+```
+
+### xxxxxxxx recorded for playback (application/xml):
+
+nothing else important to test
+
+""")
+        pytest.fail()
+    except AssertionError:
+        assert "Servirtium request body line missing from markdown" in str(sys.exc_info()[1])
+
+
+def test_corrupt_response_body_in_markdown_yields_error():
+    parser = SimpleMarkdownParser()
+    try:
+        parser.parse_markdown_string("", """## Interaction 0: GET /path/to/resource
+
+### Request headers recorded for playback:
+
+```
+a: b
+```
+
+### Request body recorded for playback (application/xml):
+
+```
+x
+```
+
+### xxxxxx recorded for playback:
+
+nothing else important to test
+
+""")
+        pytest.fail()
+    except AssertionError:
+        assert "Servirtium response headers line missing from markdown" in str(sys.exc_info()[1])
+
+
+def test_corrupt_response_body_in_markdown_yields_error():
+    parser = SimpleMarkdownParser()
+    try:
+        parser.parse_markdown_string("", """## Interaction 0: GET /path/to/resource
+
+### Request headers recorded for playback:
+
+```
+a: b
+```
+
+### Request body recorded for playback (application/xml):
+
+```
+x
+```
+
+### Response headers recorded for playback:
+
+```
+a: b
+```
+
+### Xxxxxx recorded for playback (application/xml):
+
+nothing else important to test
+
+""")
+        pytest.fail()
+    except AssertionError:
+        assert "Servirtium response body line missing from markdown" in str(sys.exc_info()[1])
+
+
+def test_good_markdown_results_in_recording_object():
     parser = SimpleMarkdownParser()
     files = parser.get_markdown_file_strings("./test/mocks1")
     parser._set_mock_files(files)

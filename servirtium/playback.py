@@ -50,7 +50,7 @@ class MockServiceHttpHandler(BaseHTTPRequestHandler):
 
         if parser.is_valid_path(self.path) and test_file:
             interaction = self.get_interaction_from_path(self.path, test_file.interactions)
-            request_headers = SimpleMarkdownParser.get_dict_from_headers_string(str(self.headers).strip())
+            request_headers = parser.get_dict_from_headers_string(str(self.headers).strip())
 
             if interaction.request_headers == request_headers or True:  # Headers currently don't match
                 self.send_response(200)
@@ -77,7 +77,7 @@ def set_markdown_files(markdown_path):
 
 
 def start():
-    server_address = ('localhost', 8099)
+    server_address = ('localhost', 61417)
     httpd = HTTPServer(server_address, MockServiceHttpHandler)
     httpd.serve_forever()
 

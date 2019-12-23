@@ -48,11 +48,11 @@ class InteractionRecording:
 
     @staticmethod
     def get_interaction_string_title(interaction: Interaction, interactions: [Interaction]) -> str:
-        return f'## Interaction {interactions.index(interaction)}: GET {interaction.path}'
+        return f'## Interaction {interactions.index(interaction)}: GET {interaction.path}\n'
 
     @staticmethod
     def wrap_string(i_string: str):
-        return '```\n' + i_string + '\n```'
+        return '\n```\n' + i_string + '\n```\n'
 
     @staticmethod
     def headers_to_string(headers: {}):
@@ -81,7 +81,7 @@ class InteractionRecording:
             lines.append(self.get_response_body_title(interaction))
             lines.append(self.wrap_string(interaction.response_body))
 
-        return '\n\n'.join(lines)
+        return '\n'.join(lines)
 
 
 def hdr_replacements(headers, replacements):
@@ -173,7 +173,7 @@ def set_response_header_removals(removals):
 
 
 def start():
-    server_address = ('localhost', 8099)
+    server_address = ('localhost', 61417)
     httpd = HTTPServer(server_address, RecorderHttpHandler)
     httpd.serve_forever()
 
