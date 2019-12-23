@@ -26,13 +26,12 @@
 #        The views and conclusions contained in the software and documentation are those
 #        of the authors and should not be interpreted as representing official policies,
 #        either expressed or implied, of the Servirtium project.
-
+import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import requests
 from definitions import MOCKS_DIR
 from servirtium.interactions import Interaction
-from servirtium.playback import SimpleMarkdownParser
 
 
 class InteractionRecording:
@@ -133,7 +132,6 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
 
         request_body = "\n"
 
-        test_file = parser.get_recording_from_method_name(RecorderHttpHandler.invoking_method)
         response = requests.get(RecorderHttpHandler.host + self.path, headers=new_req_headers)
 
         self.send_response(response.status_code)
@@ -146,18 +144,13 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
                         response_headers=hdr_removals(response.headers, RecorderHttpHandler.remove_response_headers_in_recording),
                         response_body=(str(response.content, encoding='utf-8')), response_code=response.status_code))
 
-        if len(RecorderHttpHandler.current_recording.interactions) == len(test_file.interactions):  # Last interaction
-            f = open(MOCKS_DIR + RecorderHttpHandler.invoking_method.replace("test_", '') + ".md", "w+")
-            f.write(RecorderHttpHandler.current_recording.to_markdown_string())
-            f.close()
-
-
-parser = SimpleMarkdownParser()
+        f = open(MOCKS_DIR + RecorderHttpHandler.invoking_method.replace("test_", '') + ".md", "w+")
+        f.write(RecorderHttpHandler.current_recording.to_markdown_string())
+        f.close()
 
 
 def set_markdown_files(markdown_path):
-    files = parser.get_markdown_file_strings(markdown_path)
-    parser._set_mock_files(files)
+    pass
 
 
 def set_real_host(host):
@@ -174,7 +167,12 @@ def set_response_header_removals(removals):
 
 def start():
     server_address = ('localhost', 61417)
-    httpd = HTTPServer(server_address, RecorderHttpHandler)
+    try:
+        httpd = HTTPServer(server_address, RecorderHttpHandler)
+    except OSError  as e:
+        if "Address already in use" in str(sys.exc_info()[1]):
+            assert False, "Address 'localhost:61417' is in use already - can't start recorder"
+        raise e
     httpd.serve_forever()
 
 
