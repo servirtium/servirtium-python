@@ -120,30 +120,40 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
         RecorderHttpHandler.current_recording = InteractionRecording()
 
     def do_GET(self):
+        self.process_request("\n")
+
+    def do_POST(self):
+        self.process_request_with_body()
+
+    def process_request_with_body(self):
+        self.process_request(self.rfile.read(int(self.headers['Content-Length'])))
+
+    def do_PUT(self):
+        self.process_request_with_body()
+
+    def process_request(self, request_body):
         req_headers = self.headers
         new_req_headers = {}
-
         replace_values = {'Host': self.host.replace('http://', '')}
         for k, v in req_headers.items():
             if k in replace_values.keys():
                 new_req_headers[k] = replace_values[k]
             else:
                 new_req_headers[k] = v
-
-        request_body = "\n"
-
-        response = requests.get(RecorderHttpHandler.host + self.path, headers=new_req_headers)
-
+        response = requests.request(self.command, RecorderHttpHandler.host + self.path, headers=new_req_headers)
         self.send_response(response.status_code)
         self.end_headers()
         self.wfile.write(response.content)
-
         RecorderHttpHandler.current_recording.add_interaction(
-            Interaction(request_headers=hdr_replacements(new_req_headers, RecorderHttpHandler.replace_request_headers_in_recording),
-                        request_body=request_body, request_path=self.path,
-                        response_headers=hdr_removals(response.headers, RecorderHttpHandler.remove_response_headers_in_recording),
-                        response_body=(str(response.content, encoding='utf-8')), response_code=response.status_code))
-
+            Interaction(http_verb=self.command,
+                        request_headers=hdr_replacements(new_req_headers,
+                                                         RecorderHttpHandler.replace_request_headers_in_recording),
+                        request_body=request_body,
+                        request_path=self.path,
+                        response_headers=hdr_removals(response.headers,
+                                                      RecorderHttpHandler.remove_response_headers_in_recording),
+                        response_body=(str(response.content, encoding='utf-8')),
+                        response_code=response.status_code))
         f = open(MOCKS_DIR + RecorderHttpHandler.invoking_method.replace("test_", '') + ".md", "w+")
         f.write(RecorderHttpHandler.current_recording.to_markdown_string())
         f.close()
