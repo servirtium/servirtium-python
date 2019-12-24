@@ -1,6 +1,8 @@
 ![](Servirtium-Square.png?raw=true)
 
-A Servirtium library for Python 
+Main Servirtium site: http://servirtium.dev
+
+# A Servirtium library for Python 
 
 Demo project that uses it: https://github.com/servirtium/demo-python-climate-data-tck 
 
@@ -12,7 +14,7 @@ Working so far:
 
 Not Working yet:
 
-* Any support for POST, PUT etc.
+* Support for POST, PUT etc.
 
 Help needed from Pythonistas!
 
@@ -26,8 +28,8 @@ cd servirtium-python
 pip3 install -e .
 ```
 
-The 'demo-python-climate-data-tck' demo needs you to have built the Python Servirtium 
-first as it is unpublished in pip-land.
+The 'demo-python-climate-data-tck' demo needs you to have built the Python version of Servirtium 
+first as it is presently unpublished in pip-land.
 
 ## Running unit tests
 
