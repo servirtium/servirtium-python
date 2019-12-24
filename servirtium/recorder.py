@@ -140,7 +140,7 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
                 new_req_headers[k] = replace_values[k]
             else:
                 new_req_headers[k] = v
-        response = requests.request(self.command, RecorderHttpHandler.host + self.path, headers=new_req_headers)
+        response = self.perform_request_on_real_service(new_req_headers, request_body)
         self.send_response(response.status_code)
         self.end_headers()
         self.wfile.write(response.content)
@@ -157,6 +157,15 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
         f = open(MOCKS_DIR + RecorderHttpHandler.invoking_method.replace("test_", '') + ".md", "w+")
         f.write(RecorderHttpHandler.current_recording.to_markdown_string())
         f.close()
+
+    def perform_request_on_real_service(self, new_req_headers, request_body):
+        if self.command == "GET":
+            response = requests.request(self.command, RecorderHttpHandler.host + self.path,
+                                        headers=new_req_headers)
+        else:
+            response = requests.request(self.command, RecorderHttpHandler.host + self.path,
+                                        headers=new_req_headers, data=request_body)
+        return response
 
 
 def set_markdown_files(markdown_path):
