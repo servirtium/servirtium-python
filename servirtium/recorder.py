@@ -172,7 +172,7 @@ def set_markdown_files(markdown_path):
     pass
 
 
-def set_real_host(host):
+def set_real_service(host):
     RecorderHttpHandler.host = host
 
 
