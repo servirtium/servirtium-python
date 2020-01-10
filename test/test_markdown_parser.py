@@ -4,7 +4,8 @@ import sys
 import pytest
 from unittest.mock import patch
 
-from markdown_parser import SimpleMarkdownParser
+from definitions import MOCKS_DIR, MD_1_DIR
+from servirtium.markdown_parser import SimpleMarkdownParser
 
 
 @patch('markdown_parser.SimpleMarkdownParser.get_file_content')
@@ -110,7 +111,7 @@ nothing else important to test
 
 def test_good_markdown_results_in_recording_object():
     parser = SimpleMarkdownParser()
-    files = parser.get_markdown_file_strings("./test/mocks1")
+    files = parser.get_markdown_file_strings(MD_1_DIR)
     parser._set_mock_files(files)
     recording = parser.get_recording_from_method_name("foo")
 
