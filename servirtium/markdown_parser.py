@@ -57,39 +57,39 @@ def get_markdown_file_strings(mocks_path) -> [(str, str)]:
 
 def parse_markdown_string(file_name, markdown_string) -> MockRecording:
     interaction_strings = ["## Interaction" + x for x in markdown_string.split("## Interaction") if len(x)]
-    recording_interactions = list()
 
-    for interaction in interaction_strings:
-        http_verb = interaction.split("\n")[0].split(" ")[3]
+    return MockRecording(file_name=file_name,
+                         interactions=[_parse_interaction(interaction) for interaction in interaction_strings])
 
-        clean_strings = [s for s in interaction.split("##") if len(s)]
 
-        assert clean_strings[1].startswith("# Request headers recorded for playback:"), \
-            "Servirtium request headers line missing from markdown"
+def _parse_interaction(interaction):
+    http_verb = interaction.split("\n")[0].split(" ")[3]
+    clean_strings = [s for s in interaction.split("##") if len(s)]
 
-        assert clean_strings[2].startswith("# Request body recorded for playback ("), \
-            "Servirtium request body line missing from markdown"
-        request_body = clean_strings[2].split('\n```\n')[1].strip()
+    assert clean_strings[1].startswith("# Request headers recorded for playback:"), \
+        "Servirtium request headers line missing from markdown"
 
-        assert clean_strings[3].startswith("# Response headers recorded for playback:"), \
-            "Servirtium response headers line missing from markdown"
-        response_headers_string = clean_strings[3].split('\n```\n')[1].strip()
-        response_headers = headers_from(response_headers_string)
+    assert clean_strings[2].startswith("# Request body recorded for playback ("), \
+        "Servirtium request body line missing from markdown"
+    request_body = clean_strings[2].split('\n```\n')[1].strip()
 
-        assert clean_strings[4].startswith("# Response body recorded for playback ("), \
-            "Servirtium response body line missing from markdown"
-        resp_body_chunk = clean_strings[4]
-        response_code = resp_body_chunk.split('\n```\n')[0].split("(")[1].split(":")[0]
-        response_body = resp_body_chunk.split('\n```\n')[1].strip()
+    assert clean_strings[3].startswith("# Response headers recorded for playback:"), \
+        "Servirtium response headers line missing from markdown"
+    response_headers_string = clean_strings[3].split('\n```\n')[1].strip()
+    response_headers = headers_from(response_headers_string)
 
-        i = Interaction(request_path=(_request_path(clean_strings)),
-                        request_headers=(_request_headers(clean_strings)),
-                        request_body=request_body,
-                        response_headers=response_headers, response_body=response_body,
-                        response_code=response_code, http_verb=http_verb)
-        recording_interactions.append(i)
+    assert clean_strings[4].startswith("# Response body recorded for playback ("), \
+        "Servirtium response body line missing from markdown"
+    resp_body_chunk = clean_strings[4]
+    response_code = resp_body_chunk.split('\n```\n')[0].split("(")[1].split(":")[0]
+    response_body = resp_body_chunk.split('\n```\n')[1].strip()
 
-    return MockRecording(file_name=file_name, interactions=recording_interactions)
+    i = Interaction(request_path=(_request_path(clean_strings)),
+                    request_headers=(_request_headers(clean_strings)),
+                    request_body=request_body,
+                    response_headers=response_headers, response_body=response_body,
+                    response_code=response_code, http_verb=http_verb)
+    return i
 
 
 def _request_path(clean_strings):

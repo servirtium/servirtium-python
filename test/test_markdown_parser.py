@@ -118,7 +118,7 @@ def test_good_markdown_results_in_recording_object():
 
     i = recording.interactions[0]
 
-    assert i.http_verb == "GETTTTTT"
+    assert i.http_verb == "GET"
     assert i.path == "/path/to/resource"
     assert str(i.request_headers) == "{'Header1': '11', 'Header2': '22'}"
     assert i.request_body == "abc123"
