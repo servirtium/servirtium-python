@@ -10,3 +10,5 @@ servirtium.egg-info/
 __pycache__
 
 test/.mocks/
+.idea
+*.iml
