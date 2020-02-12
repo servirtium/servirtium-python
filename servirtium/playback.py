@@ -30,7 +30,7 @@
 from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from servirtium.markdown_parser import SimpleMarkdownParser, headers_from, get_markdown_file_strings
+from servirtium.markdown_parser import SimpleMarkdownParser, headers_from
 
 
 class MockServiceHttpHandler(BaseHTTPRequestHandler):
