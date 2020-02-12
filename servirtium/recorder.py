@@ -31,56 +31,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import requests
 from definitions import MOCKS_DIR
+from interaction_recording import InteractionRecording
 from servirtium.interactions import Interaction
-
-
-class InteractionRecording:
-
-    req_header_title = '### Request headers recorded for playback:'
-    req_body_title = '### Request body recorded for playback ():'
-
-    res_header_title = '### Response headers recorded for playback:'
-
-    @staticmethod
-    def get_response_body_title(interaction: Interaction):
-        return f"### Response body recorded for playback ({interaction.response_code}: {interaction.response_type}):"
-
-    @staticmethod
-    def get_interaction_string_title(interaction: Interaction, interactions: [Interaction]) -> str:
-        return f'## Interaction {interactions.index(interaction)}: {interaction.http_verb} {interaction.path}\n'
-
-    @staticmethod
-    def wrap_string(i_string: str):
-        return '\n```\n' + i_string + '\n```\n'
-
-    @staticmethod
-    def headers_to_string(headers: {}):
-        return '\n'.join([f'{k}: {v}' for (k, v) in headers.items()])
-
-    def __init__(self):
-        self.interactions = []
-
-    def add_interaction(self, interaction: Interaction):
-        self.interactions.append(interaction)
-
-    def to_markdown_string(self) -> str:
-        lines = []
-
-        for interaction in self.interactions:
-            lines.append(self.get_interaction_string_title(interaction, self.interactions))
-
-            lines.append(self.req_header_title)
-            lines.append(self.wrap_string(self.headers_to_string(interaction.request_headers)))
-            lines.append(self.req_body_title)
-            lines.append(self.wrap_string(interaction.request_body if not '' else '\n'))  # if empty \n else
-
-            lines.append(self.res_header_title)
-            lines.append(self.wrap_string(self.headers_to_string(interaction.response_headers)))
-
-            lines.append(self.get_response_body_title(interaction))
-            lines.append(self.wrap_string(interaction.response_body))
-
-        return '\n'.join(lines)
 
 
 def hdr_replacements(headers, replacements):
