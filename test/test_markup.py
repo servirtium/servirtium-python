@@ -26,3 +26,12 @@ line 1
 line 2
 ```
 '''
+
+def test_renders_titled_section():
+    assert Markup().section(3, 'title', '''body 1
+body 2 ''').as_markdown() == '''### title
+```
+body 1
+body 2
+```
+'''

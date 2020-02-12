@@ -29,3 +29,6 @@ class Markup:
 
     def as_markdown(self):
         return '\n'.join([e.as_markdown() for e in self.elements]) + '\n'
+
+    def section(self, level : int, title: str, body: str):
+        return self.header(level, title).code_block(body)
