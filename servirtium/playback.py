@@ -30,7 +30,7 @@
 from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from servirtium.markdown_parser import SimpleMarkdownParser
+from servirtium.markdown_parser import SimpleMarkdownParser, headers_from
 from servirtium.interactions import Interaction
 
 
@@ -50,7 +50,7 @@ class MockServiceHttpHandler(BaseHTTPRequestHandler):
 
         if parser.is_valid_path(self.path) and test_file:
             interaction = self.get_interaction_from_path(self.path, test_file.interactions)
-            request_headers = parser.get_dict_from_headers_string(str(self.headers).strip())
+            request_headers = headers_from(str(self.headers).strip())
 
             if interaction.request_headers == request_headers or True:  # Headers currently don't match
                 self.send_response(200)
@@ -64,8 +64,8 @@ class MockServiceHttpHandler(BaseHTTPRequestHandler):
                 self.wfile.write(bytes(interaction.response_body, "utf-8"))
         else:
             self.send_error(
-            HTTPStatus.NOT_FOUND,
-            "Unknown file path")
+                HTTPStatus.NOT_FOUND,
+                "Unknown file path")
 
 
 parser = SimpleMarkdownParser()
@@ -84,4 +84,3 @@ def start():
 
 if __name__ == "__main__":
     start()
-

@@ -46,69 +46,64 @@ class SimpleMarkdownParser:
         return bool(filter(lambda x: x.path == path, [i.interactions for i in [m for m in self.recordings]]))
 
     @staticmethod
-    def get_dict_from_headers_string(headers_string) -> {}:
-        out = {}
-        lines = headers_string.split('\n')
-
-        for line in lines:
-            line_split = [l.strip().replace('\n', '') for l in line.split(':')]
-            out[line_split[0]] = line_split[1]
-        return out
-
-    @staticmethod
     def get_markdown_file_strings(mocks_path) -> [(str, str)]:
         return [(f.name, f.read_text()) for f in Path(mocks_path).iterdir() if f.is_file()]
 
     def _set_mock_files(self, mock_files: [(str, str)]):
         for (name, content) in mock_files:
             self.markdown_files.append((name, content))
-        self.recordings = [self.parse_markdown_string(n, c) for (n, c) in self.markdown_files]
+        self.recordings = [parse_markdown_string(n, c) for (n, c) in self.markdown_files]
 
-    def parse_markdown_string(self, file_name, markdown_string) -> MockRecording:
 
-        interaction_strings = ["## Interaction" + x for x in markdown_string.split("## Interaction") if len(x)]
-        recording_interactions = list()
+def parse_markdown_string(file_name, markdown_string) -> MockRecording:
+    interaction_strings = ["## Interaction" + x for x in markdown_string.split("## Interaction") if len(x)]
+    recording_interactions = list()
 
-        for interaction in interaction_strings:
+    for interaction in interaction_strings:
 
-            http_verb = interaction.split("\n")[0].split(" ")[3]
+        http_verb = interaction.split("\n")[0].split(" ")[3]
 
-            raw_strings = interaction.split("##")
-            clean_strings = []
+        clean_strings = [s for s in interaction.split("##") if len(s)]
 
-            for string in raw_strings:
-                if len(string):
-                    clean_strings.append(string)
+        interaction_description = clean_strings[0]
+        interaction_split = interaction_description.split(' ')
+        request_path = interaction_split[len(interaction_split) - 1].strip()
 
-            interaction_description = clean_strings[0]
-            interaction_split = interaction_description.split(' ')
-            request_path = interaction_split[len(interaction_split) - 1].strip()
+        assert clean_strings[1].startswith("# Request headers recorded for playback:"), \
+            "Servirtium request headers line missing from markdown"
+        split = clean_strings[1].split('\n```\n')
+        request_headers_string = split[1].strip()
+        request_headers = headers_from(request_headers_string)
 
-            assert clean_strings[1].startswith("# Request headers recorded for playback:"), \
-                ("Servirtium request headers line missing from markdown")
-            split = clean_strings[1].split('\n```\n')
-            request_headers_string = split[1].strip()
-            request_headers = self.get_dict_from_headers_string(request_headers_string)
+        assert clean_strings[2].startswith("# Request body recorded for playback ("), \
+            "Servirtium request body line missing from markdown"
+        request_body = clean_strings[2].split('\n```\n')[1].strip()
 
-            assert clean_strings[2].startswith("# Request body recorded for playback ("), \
-                ("Servirtium request body line missing from markdown")
-            request_body = clean_strings[2].split('\n```\n')[1].strip()
+        assert clean_strings[3].startswith("# Response headers recorded for playback:"), \
+            "Servirtium response headers line missing from markdown"
+        response_headers_string = clean_strings[3].split('\n```\n')[1].strip()
+        response_headers = headers_from(response_headers_string)
 
-            assert clean_strings[3].startswith("# Response headers recorded for playback:"), \
-                ("Servirtium response headers line missing from markdown")
-            response_headers_string = clean_strings[3].split('\n```\n')[1].strip()
-            response_headers = self.get_dict_from_headers_string(response_headers_string)
+        assert clean_strings[4].startswith("# Response body recorded for playback ("), \
+            "Servirtium response body line missing from markdown"
+        resp_body_chunk = clean_strings[4]
+        response_code = resp_body_chunk.split('\n```\n')[0].split("(")[1].split(":")[0]
+        response_body = resp_body_chunk.split('\n```\n')[1].strip()
 
-            assert clean_strings[4].startswith("# Response body recorded for playback ("), \
-                ("Servirtium response body line missing from markdown")
-            resp_body_chunk = clean_strings[4]
-            response_code = resp_body_chunk.split('\n```\n')[0].split("(")[1].split(":")[0]
-            response_body = resp_body_chunk.split('\n```\n')[1].strip()
+        i = Interaction(request_path=request_path,
+                        request_headers=request_headers, request_body=request_body,
+                        response_headers=response_headers, response_body=response_body,
+                        response_code=response_code, http_verb=http_verb)
+        recording_interactions.append(i)
 
-            i = Interaction(request_path=request_path,
-                            request_headers=request_headers, request_body=request_body,
-                            response_headers=response_headers, response_body=response_body,
-                            response_code=response_code, http_verb=http_verb)
-            recording_interactions.append(i)
+    return MockRecording(file_name=file_name, interactions=recording_interactions)
 
-        return MockRecording(file_name=file_name, interactions=recording_interactions)
+
+def headers_from(headers_string) -> {}:
+    out = {}
+    lines = headers_string.split('\n')
+
+    for line in lines:
+        line_split = [token.strip().replace('\n', '') for token in line.split(':')]
+        out[line_split[0]] = line_split[1]
+    return out
