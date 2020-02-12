@@ -27,7 +27,7 @@
 #        of the authors and should not be interpreted as representing official policies,
 #        either expressed or implied, of the Servirtium project.
 
-import os
+from pathlib import Path
 
 from servirtium.interactions import MockRecording, Interaction
 
@@ -45,7 +45,8 @@ class SimpleMarkdownParser:
     def is_valid_path(self, path: [MockRecording]) -> bool:
         return bool(filter(lambda x: x.path == path, [i.interactions for i in [m for m in self.recordings]]))
 
-    def get_dict_from_headers_string(self, headers_string) -> {}:
+    @staticmethod
+    def get_dict_from_headers_string(headers_string) -> {}:
         out = {}
         lines = headers_string.split('\n')
 
@@ -54,19 +55,9 @@ class SimpleMarkdownParser:
             out[line_split[0]] = line_split[1]
         return out
 
-    def get_markdown_file_strings(self, mocks_path) -> [(str, str)]:
-        file_strings = []
-
-        for filename in os.listdir(mocks_path):
-            file_path = os.path.join(mocks_path, filename)
-            file_strings.append((filename, (self.get_file_content(file_path))))
-
-        return file_strings
-
-    def get_file_content(self, file_path):
-        file = open(file_path, "r")
-        content = file.read()
-        return content
+    @staticmethod
+    def get_markdown_file_strings(mocks_path) -> [(str, str)]:
+        return [(f.name, f.read_text()) for f in Path(mocks_path).iterdir() if f.is_file()]
 
     def _set_mock_files(self, mock_files: [(str, str)]):
         for (name, content) in mock_files:

@@ -5,6 +5,7 @@ import requests
 import recorder as MockRecorder
 from definitions import MOCKS_DIR
 
+
 @patch('recorder.RecorderHttpHandler.perform_request_on_real_service')
 def test_something(mock_perform_request_on_real_service):
     mock_perform_request_on_real_service.return_value = AttrDict({
@@ -65,7 +66,6 @@ a: 1
 something wonderful has happened
 ```
 """
-
 
 
 class AttrDict(dict):

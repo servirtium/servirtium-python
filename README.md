@@ -34,7 +34,7 @@ first as it is presently unpublished in pip-land.
 ## Running unit tests
 
 ```
-pip3 install requests
+pip3 install pytest
 cd servirtium-python
 pytest
 ```
