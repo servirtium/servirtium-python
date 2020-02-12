@@ -39,15 +39,11 @@ class SimpleMarkdownParser:
         self.recordings = []
 
     def get_recording_from_method_name(self, method_name: str) -> MockRecording:
-        recordings = list(filter(lambda mock: mock.file_name.replace('.md', '') in method_name, self.recordings))
-        return recordings[0] if len(recordings) > 0 else None
+        recordings = [recording for recording in self.recordings if recording.name() in method_name]
+        return recordings[0] if recordings else None
 
     def is_valid_path(self, path: [MockRecording]) -> bool:
         return bool(filter(lambda x: x.path == path, [i.interactions for i in [m for m in self.recordings]]))
-
-    @staticmethod
-    def get_markdown_file_strings(mocks_path) -> [(str, str)]:
-        return [(f.name, f.read_text()) for f in Path(mocks_path).iterdir() if f.is_file()]
 
     def _set_mock_files(self, mock_files: [(str, str)]):
         for (name, content) in mock_files:
@@ -55,25 +51,21 @@ class SimpleMarkdownParser:
         self.recordings = [parse_markdown_string(n, c) for (n, c) in self.markdown_files]
 
 
+def get_markdown_file_strings(mocks_path) -> [(str, str)]:
+    return [(f.name, f.read_text()) for f in Path(mocks_path).iterdir() if f.is_file()]
+
+
 def parse_markdown_string(file_name, markdown_string) -> MockRecording:
     interaction_strings = ["## Interaction" + x for x in markdown_string.split("## Interaction") if len(x)]
     recording_interactions = list()
 
     for interaction in interaction_strings:
-
         http_verb = interaction.split("\n")[0].split(" ")[3]
 
         clean_strings = [s for s in interaction.split("##") if len(s)]
 
-        interaction_description = clean_strings[0]
-        interaction_split = interaction_description.split(' ')
-        request_path = interaction_split[len(interaction_split) - 1].strip()
-
         assert clean_strings[1].startswith("# Request headers recorded for playback:"), \
             "Servirtium request headers line missing from markdown"
-        split = clean_strings[1].split('\n```\n')
-        request_headers_string = split[1].strip()
-        request_headers = headers_from(request_headers_string)
 
         assert clean_strings[2].startswith("# Request body recorded for playback ("), \
             "Servirtium request body line missing from markdown"
@@ -90,13 +82,26 @@ def parse_markdown_string(file_name, markdown_string) -> MockRecording:
         response_code = resp_body_chunk.split('\n```\n')[0].split("(")[1].split(":")[0]
         response_body = resp_body_chunk.split('\n```\n')[1].strip()
 
-        i = Interaction(request_path=request_path,
-                        request_headers=request_headers, request_body=request_body,
+        i = Interaction(request_path=(_request_path(clean_strings)),
+                        request_headers=(_request_headers(clean_strings)),
+                        request_body=request_body,
                         response_headers=response_headers, response_body=response_body,
                         response_code=response_code, http_verb=http_verb)
         recording_interactions.append(i)
 
     return MockRecording(file_name=file_name, interactions=recording_interactions)
+
+
+def _request_path(clean_strings):
+    interaction_description = clean_strings[0]
+    interaction_split = interaction_description.split(' ')
+    return interaction_split[-1].strip()
+
+
+def _request_headers(clean_strings):
+    split = clean_strings[1].split('\n```\n')
+    request_headers_string = split[1].strip()
+    return headers_from(request_headers_string)
 
 
 def headers_from(headers_string) -> {}:

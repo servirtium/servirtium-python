@@ -30,7 +30,7 @@
 from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from servirtium.markdown_parser import SimpleMarkdownParser, headers_from
+from servirtium.markdown_parser import SimpleMarkdownParser, headers_from, get_markdown_file_strings
 from servirtium.interactions import Interaction
 
 
@@ -72,7 +72,7 @@ parser = SimpleMarkdownParser()
 
 
 def set_markdown_files(markdown_path):
-    files = parser.get_markdown_file_strings(markdown_path)
+    files = get_markdown_file_strings(markdown_path)
     parser._set_mock_files(files)
 
 
