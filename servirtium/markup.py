@@ -4,15 +4,15 @@ class Header:
         self.text = text
 
     def as_markdown(self):
-        return f'{"#" * self.level} {self.text}'
+        return f'{"#" * self.level} {self.text}\n'
 
 
 class CodeBlock:
     def __init__(self, code: str):
-        self.code = code.strip()
+        self.code = code
 
     def as_markdown(self):
-        return f'```\n{self.code}\n```'
+        return f'```\n{self.code}\n```\n'
 
 
 class Markup:
@@ -27,8 +27,8 @@ class Markup:
         self.elements.append(CodeBlock(text))
         return self
 
-    def as_markdown(self):
-        return '\n'.join([e.as_markdown() for e in self.elements]) + '\n'
-
     def section(self, level : int, title: str, body: str):
         return self.header(level, title).code_block(body)
+
+    def as_markdown(self):
+        return '\n'.join([e.as_markdown() for e in self.elements])
