@@ -1,22 +1,21 @@
-import json
 import sys
-
-import pytest
 from unittest.mock import patch
 
-from markdown_parser import SimpleMarkdownParser
+import pytest
+
+from markdown_parser import SimpleMarkdownParser, parse_markdown_string, get_markdown_file_strings
 
 
 @patch('markdown_parser.SimpleMarkdownParser.get_file_content')
 def qqtest_bad_markdown_means_no_recordings(mock_get_file_content):
     mock_get_file_content.return_value = 'abc 123'
     recording = SimpleMarkdownParser().get_recording_from_method_name("foo")
-    assert recording is None\
+    assert recording is None
+
 
 def test_corrupt_request_headers_in_markdown_yields_error():
-    parser = SimpleMarkdownParser()
     try:
-        parser.parse_markdown_string("", """## Interaction 0: GET /path/to/resource
+        parse_markdown_string("", """## Interaction 0: GET /path/to/resource
 
 ### XXXXXXXX recorded for playback:
 
@@ -27,10 +26,10 @@ nothing else important to test
     except AssertionError:
         assert "Servirtium request headers line missing from markdown" in str(sys.exc_info()[1])
 
+
 def test_corrupt_request_body_in_markdown_yields_error():
-    parser = SimpleMarkdownParser()
     try:
-        parser.parse_markdown_string("", """## Interaction 0: GET /path/to/resource
+        parse_markdown_string("", """## Interaction 0: GET /path/to/resource
 
 ### Request headers recorded for playback:
 
@@ -51,7 +50,7 @@ nothing else important to test
 def test_corrupt_response_body_in_markdown_yields_error():
     parser = SimpleMarkdownParser()
     try:
-        parser.parse_markdown_string("", """## Interaction 0: GET /path/to/resource
+        parse_markdown_string("", """## Interaction 0: GET /path/to/resource
 
 ### Request headers recorded for playback:
 
@@ -75,10 +74,10 @@ nothing else important to test
         assert "Servirtium response headers line missing from markdown" in str(sys.exc_info()[1])
 
 
-def test_corrupt_response_body_in_markdown_yields_error():
+def test_corrupt_response_body_in_markdown_yields_error1():
     parser = SimpleMarkdownParser()
     try:
-        parser.parse_markdown_string("", """## Interaction 0: GET /path/to/resource
+        parse_markdown_string("", """## Interaction 0: GET /path/to/resource
 
 ### Request headers recorded for playback:
 
@@ -110,7 +109,7 @@ nothing else important to test
 
 def test_good_markdown_results_in_recording_object():
     parser = SimpleMarkdownParser()
-    files = parser.get_markdown_file_strings("./test/mocks1")
+    files = get_markdown_file_strings("./test/mocks1")
     parser._set_mock_files(files)
     recording = parser.get_recording_from_method_name("foo")
 
@@ -119,7 +118,7 @@ def test_good_markdown_results_in_recording_object():
 
     i = recording.interactions[0]
 
-    assert i.http_verb == "GETTTTTT"
+    assert i.http_verb == "GET"
     assert i.path == "/path/to/resource"
     assert str(i.request_headers) == "{'Header1': '11', 'Header2': '22'}"
     assert i.request_body == "abc123"

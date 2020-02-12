@@ -26,6 +26,7 @@
 #        The views and conclusions contained in the software and documentation are those
 #        of the authors and should not be interpreted as representing official policies,
 #        either expressed or implied, of the Servirtium project.
+from os.path import splitext
 
 
 class Interaction:
@@ -47,6 +48,9 @@ class MockRecording:
     def __init__(self, file_name, interactions : [Interaction]):
         self.file_name = file_name
         self.interactions = interactions
+
+    def name(self):
+        return splitext(self.file_name)[0]
 
 
 

@@ -6,5 +6,5 @@ setup(name='servirtium',
       author='Paul Hammant',
       author_email='paul@hammant.org',
       url='https://github.com/servirtium/servirtium-python',
-      packages=['servirtium'],
-     )
+      packages=['servirtium'], requires=['requests', 'pytest']
+      )

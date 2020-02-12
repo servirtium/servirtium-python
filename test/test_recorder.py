@@ -2,8 +2,9 @@ import threading
 from unittest.mock import patch
 
 import requests
-import recorder as MockRecorder
+import recorder
 from definitions import MOCKS_DIR
+
 
 @patch('recorder.RecorderHttpHandler.perform_request_on_real_service')
 def test_something(mock_perform_request_on_real_service):
@@ -15,17 +16,17 @@ def test_something(mock_perform_request_on_real_service):
             "a": "1"
         }
     })
-    servirtium_site = "http://localhost:61417"
+    # servirtium_site = "http://localhost:61417"
 
-    MockRecorder.set_markdown_files("mocks2")
-    MockRecorder.set_real_service('http://climatedataapi.worldbank.org')
-    MockRecorder.set_request_header_replacements({'User-Agent': 'Servirtium-Testing'})
-    MockRecorder.set_response_header_removals({'Set-Cookie: AWSALB', 'X-', "Date:"})
+    recorder.set_markdown_files("mocks2")
+    recorder.set_real_service('http://climatedataapi.worldbank.org')
+    recorder.set_request_header_replacements({'User-Agent': 'Servirtium-Testing'})
+    recorder.set_response_header_removals({'Set-Cookie: AWSALB', 'X-', "Date:"})
 
-    servirtium_daemon = threading.Thread(target=MockRecorder.start, daemon=True)
+    servirtium_daemon = threading.Thread(target=recorder.start, daemon=True)
     servirtium_daemon.start()
 
-    MockRecorder.RecorderHttpHandler.set_invoking_method("just_testing_ignore_me")
+    recorder.RecorderHttpHandler.set_invoking_method("just_testing_ignore_me")
 
     rsp = requests.get("http://localhost:61417/abc/123")
 
@@ -65,7 +66,6 @@ a: 1
 something wonderful has happened
 ```
 """
-
 
 
 class AttrDict(dict):

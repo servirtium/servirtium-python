@@ -1,4 +1,4 @@
-## Interaction 0: GETTTTTT /path/to/resource
+## Interaction 0: GET /path/to/resource
 
 ### Request headers recorded for playback:
 
