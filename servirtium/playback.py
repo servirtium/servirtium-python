@@ -31,41 +31,33 @@ from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from servirtium.markdown_parser import SimpleMarkdownParser, headers_from, get_markdown_file_strings
-from servirtium.interactions import Interaction
-
 
 class MockServiceHttpHandler(BaseHTTPRequestHandler):
     invoking_method = "default_value"
-
-    @staticmethod
-    def get_interaction_from_path(path, interactions) -> Interaction:
-        return list(filter(lambda a: a.path == path, interactions))[0]
 
     @staticmethod
     def set_invoking_method(method_name):
         MockServiceHttpHandler.invoking_method = method_name
 
     def do_GET(self):
-        test_file = parser.get_recording_from_method_name(MockServiceHttpHandler.invoking_method)
+        recording = parser.get_recording_from_method_name(MockServiceHttpHandler.invoking_method)
 
-        if parser.is_valid_path(self.path) and test_file:
-            interaction = self.get_interaction_from_path(self.path, test_file.interactions)
+        if parser.is_valid_path(self.path) and recording:
+            interaction = next([i for i in recording.interactions if i.path == self.path])
             request_headers = headers_from(str(self.headers).strip())
 
             if interaction.request_headers == request_headers or True:  # Headers currently don't match
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
 
-                if False:  # To fix, currently won't send with headers from .md file
-                    for key, value in interaction.response_headers.items():
-                        self.send_header(key.strip(), value)
+                # if False:  # To fix, currently won't send with headers from .md file
+                #     for key, value in interaction.response_headers.items():
+                #         self.send_header(key.strip(), value)
 
                 self.end_headers()
                 self.wfile.write(bytes(interaction.response_body, "utf-8"))
         else:
-            self.send_error(
-                HTTPStatus.NOT_FOUND,
-                "Unknown file path")
+            self.send_error(HTTPStatus.NOT_FOUND, "Unknown file path")
 
 
 parser = SimpleMarkdownParser()
