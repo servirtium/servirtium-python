@@ -66,14 +66,10 @@ def _parse_interaction(interaction):
     http_verb = interaction.split("\n")[0].split(" ")[3]
     clean_strings = [s for s in interaction.split("##") if len(s)]
 
-    assert clean_strings[1].startswith("# Request headers recorded for playback:"), \
-        "Servirtium request headers line missing from markdown"
-    assert clean_strings[2].startswith("# Request body recorded for playback ("), \
-        "Servirtium request body line missing from markdown"
-    assert clean_strings[3].startswith("# Response headers recorded for playback:"), \
-        "Servirtium response headers line missing from markdown"
-    assert clean_strings[4].startswith("# Response body recorded for playback ("), \
-        "Servirtium response body line missing from markdown"
+    _checking(clean_strings, 1, '# Request headers recorded for playback:', 'request headers')
+    _checking(clean_strings, 2, '# Request body recorded for playback (', "request body")
+    _checking(clean_strings, 3, '# Response headers recorded for playback:', 'response headers')
+    _checking(clean_strings, 4, '# Response body recorded for playback (', 'response body')
 
     response_body, response_code = _response(clean_strings)
 
@@ -107,6 +103,10 @@ def _response(clean_strings):
 
 def _code_block_body(clean_strings, index):
     return clean_strings[index].split('\n```\n')[1].strip()
+
+
+def _checking(clean_strings, index, expected_prefix, description):
+    assert clean_strings[index].startswith(expected_prefix), f"Servirtium {description} line missing from markdown"
 
 
 def headers_from(headers_string) -> {}:
