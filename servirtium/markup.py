@@ -27,7 +27,7 @@ class Markup:
         self.elements.append(CodeBlock(text))
         return self
 
-    def section(self, level : int, title: str, body: str):
+    def section(self, level: int, title: str, body: str):
         return self.header(level, title).code_block(body)
 
     def as_markdown(self):

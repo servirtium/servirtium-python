@@ -68,28 +68,22 @@ def _parse_interaction(interaction):
 
     assert clean_strings[1].startswith("# Request headers recorded for playback:"), \
         "Servirtium request headers line missing from markdown"
-
     assert clean_strings[2].startswith("# Request body recorded for playback ("), \
         "Servirtium request body line missing from markdown"
-    request_body = clean_strings[2].split('\n```\n')[1].strip()
-
     assert clean_strings[3].startswith("# Response headers recorded for playback:"), \
         "Servirtium response headers line missing from markdown"
-    response_headers_string = clean_strings[3].split('\n```\n')[1].strip()
-    response_headers = headers_from(response_headers_string)
-
     assert clean_strings[4].startswith("# Response body recorded for playback ("), \
         "Servirtium response body line missing from markdown"
-    resp_body_chunk = clean_strings[4]
-    response_code = resp_body_chunk.split('\n```\n')[0].split("(")[1].split(":")[0]
-    response_body = resp_body_chunk.split('\n```\n')[1].strip()
 
-    i = Interaction(request_path=(_request_path(clean_strings)),
-                    request_headers=(_request_headers(clean_strings)),
-                    request_body=request_body,
-                    response_headers=response_headers, response_body=response_body,
-                    response_code=response_code, http_verb=http_verb)
-    return i
+    response_body, response_code = _response(clean_strings)
+
+    return Interaction(request_path=(_request_path(clean_strings)),
+                       request_headers=(_request_headers(clean_strings)),
+                       request_body=(_code_block_body(clean_strings, 2)),
+                       response_headers=(headers_from(_code_block_body(clean_strings, 3))),
+                       response_body=response_body,
+                       response_code=response_code,
+                       http_verb=http_verb)
 
 
 def _request_path(clean_strings):
@@ -102,6 +96,17 @@ def _request_headers(clean_strings):
     split = clean_strings[1].split('\n```\n')
     request_headers_string = split[1].strip()
     return headers_from(request_headers_string)
+
+
+def _response(clean_strings):
+    resp_body_chunk = clean_strings[4]
+    response_code = resp_body_chunk.split('\n```\n')[0].split("(")[1].split(":")[0]
+    response_body = resp_body_chunk.split('\n```\n')[1].strip()
+    return response_body, response_code
+
+
+def _code_block_body(clean_strings, index):
+    return clean_strings[index].split('\n```\n')[1].strip()
 
 
 def headers_from(headers_string) -> {}:
