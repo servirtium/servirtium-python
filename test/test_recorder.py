@@ -18,7 +18,6 @@ def test_something(mock_perform_request_on_real_service):
     })
     # servirtium_site = "http://localhost:61417"
 
-    recorder.set_markdown_files("mocks2")
     recorder.set_real_service('http://climatedataapi.worldbank.org')
     recorder.set_request_header_replacements({'User-Agent': 'Servirtium-Testing'})
     recorder.set_response_header_removals({'Set-Cookie: AWSALB', 'X-', "Date:"})

@@ -26,6 +26,7 @@
 #        The views and conclusions contained in the software and documentation are those
 #        of the authors and should not be interpreted as representing official policies,
 #        either expressed or implied, of the Servirtium project.
+import itertools
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -35,36 +36,41 @@ from interaction_recording import InteractionRecording
 from servirtium.interactions import Interaction
 
 
-def hdr_replacements(headers, replacements):
-    new_headers = {}
-    for k, v in headers.items():
-        if k in replacements.keys():
-            new_headers[k] = replacements[k]
-        else:
-            new_headers[k] = v
+def _prune_headers(headers, removables):
+    def _to_be_removed(item):
+        (key, value) = item
+        line = f'{key}: {value}'
+        any([line.startswith(removable) for removable in removables])
 
-    return new_headers
+    return dict(itertools.filterfalse(_to_be_removed, headers.items()))
 
 
-def hdr_removals(headers, removals):
-    new_headers = {}
-    for k, v in headers.items():
-        should_remove = False
-        one_line = k + ": " + v
-        for rmv in removals:
-            if one_line.startswith(rmv):
-                should_remove = True
-        if not should_remove:
-            new_headers[k] = v
-    return new_headers
+class Interception:
+    def __init__(self,
+                 host: str = "default_host",
+                 request_header_overrides: dict = None,
+                 response_headers_to_remove: list = None) -> None:
+        self.host = host
+        self.request_header_overrides = request_header_overrides or {}
+        self.response_headers_to_remove = response_headers_to_remove or []
+        self.current_recording = InteractionRecording()
+
+    def modified_request_headers(self, new_req_headers):
+        modified = new_req_headers.copy()
+        modified.update(self.request_header_overrides)
+        return modified
+
+    def modified_response_headers(self, response):
+        return _prune_headers(response.headers, self.response_headers_to_remove)
+
+    def real_service_host(self):
+        return self.host.replace('http://', '')
 
 
+# noinspection PyPep8Naming
 class RecorderHttpHandler(BaseHTTPRequestHandler):
-    host = "default_host"
-    replace_request_headers_in_recording = {}
-    remove_response_headers_in_recording = []
+    interception = Interception()
     invoking_method = 'default_method'
-    current_recording = InteractionRecording()
 
     @staticmethod
     def set_invoking_method(method_name):
@@ -84,56 +90,45 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
         self.process_request_with_body()
 
     def process_request(self, request_body):
-        req_headers = self.headers
-        new_req_headers = {}
-        replace_values = {'Host': self.host.replace('http://', '')}
-        for k, v in req_headers.items():
-            if k in replace_values.keys():
-                new_req_headers[k] = replace_values[k]
-            else:
-                new_req_headers[k] = v
+        new_req_headers = dict(self.headers.items())
+        new_req_headers.update({'Host': self.interception.real_service_host()})
+
         response = self.perform_request_on_real_service(new_req_headers, request_body)
         self.send_response(response.status_code)
         self.end_headers()
         self.wfile.write(response.content)
-        RecorderHttpHandler.current_recording.add_interaction(
+        RecorderHttpHandler.interception.current_recording.add_interaction(
             Interaction(http_verb=self.command,
-                        request_headers=hdr_replacements(new_req_headers,
-                                                         RecorderHttpHandler.replace_request_headers_in_recording),
+                        request_headers=self.interception.modified_request_headers(new_req_headers),
                         request_body=request_body,
                         request_path=self.path,
-                        response_headers=hdr_removals(response.headers,
-                                                      RecorderHttpHandler.remove_response_headers_in_recording),
+                        response_headers=self.interception.modified_response_headers(response),
                         response_body=(str(response.content, encoding='utf-8')),
                         response_code=response.status_code))
         f = open(MOCKS_DIR + RecorderHttpHandler.invoking_method.replace("test_", '') + ".md", "w+")
-        f.write(RecorderHttpHandler.current_recording.to_markdown_string())
+        f.write(RecorderHttpHandler.interception.current_recording.to_markdown_string())
         f.close()
 
     def perform_request_on_real_service(self, new_req_headers, request_body):
         if self.command == "GET":
-            response = requests.request(self.command, RecorderHttpHandler.host + self.path,
+            response = requests.request(self.command, RecorderHttpHandler.interception.host + self.path,
                                         headers=new_req_headers)
         else:
-            response = requests.request(self.command, RecorderHttpHandler.host + self.path,
+            response = requests.request(self.command, RecorderHttpHandler.interception.host + self.path,
                                         headers=new_req_headers, data=request_body)
         return response
 
 
-def set_markdown_files(markdown_path):
-    pass
-
-
 def set_real_service(host):
-    RecorderHttpHandler.host = host
+    RecorderHttpHandler.interception.host = host
 
 
 def set_request_header_replacements(replacements):
-    RecorderHttpHandler.replace_request_headers_in_recording = replacements
+    RecorderHttpHandler.interception.request_header_overrides = replacements
 
 
 def set_response_header_removals(removals):
-    RecorderHttpHandler.remove_response_headers_in_recording = removals
+    RecorderHttpHandler.interception.response_headers_to_remove = removals
 
 
 def start():
@@ -149,5 +144,3 @@ def start():
 
 if __name__ == "__main__":
     start()
-
-
