@@ -70,12 +70,15 @@ class Interception:
 # noinspection PyPep8Naming
 class RecorderHttpHandler(BaseHTTPRequestHandler):
     interception = Interception()
-    invoking_method = 'default_method'
+    markdown_filename = 'default_method'
 
     @staticmethod
-    def set_invoking_method(method_name):
-        RecorderHttpHandler.invoking_method = method_name
+    def set_markdown_filename(markdown_filename):
+        RecorderHttpHandler.markdown_filename = markdown_filename
         RecorderHttpHandler.current_recording = InteractionRecording()
+
+    # TODO - should override handle() of http.server
+    #        instead of do_GET() of BaseHTTPRequestHandler
 
     def do_GET(self):
         self.process_request("\n")
@@ -105,7 +108,7 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
                         response_headers=self.interception.modified_response_headers(response),
                         response_body=(str(response.content, encoding='utf-8')),
                         response_code=response.status_code))
-        f = open(MOCKS_DIR + RecorderHttpHandler.invoking_method.replace("test_", '') + ".md", "w+")
+        f = open(MOCKS_DIR + RecorderHttpHandler.markdown_filename.replace("test_", '') + ".md", "w+")
         f.write(RecorderHttpHandler.interception.current_recording.to_markdown_string())
         f.close()
 

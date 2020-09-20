@@ -34,14 +34,17 @@ from servirtium.markdown_parser import SimpleMarkdownParser, headers_from
 
 
 class MockServiceHttpHandler(BaseHTTPRequestHandler):
-    invoking_method = "default_value"
+    markdown_filename = "default_value"
 
     @staticmethod
-    def set_invoking_method(method_name):
-        MockServiceHttpHandler.invoking_method = method_name
+    def set_markdown_filename(markdown_filename):
+        MockServiceHttpHandler.markdown_filename = markdown_filename
+
+    # TODO - should override handle() of http.server
+    #        instead of do_GET() of BaseHTTPRequestHandler
 
     def do_GET(self):
-        recording = parser.get_recording_from_method_name(MockServiceHttpHandler.invoking_method)
+        recording = parser.get_recording_from_method_name(MockServiceHttpHandler.markdown_filename)
 
         if parser.is_valid_path(self.path) and recording:
             interaction = next([i for i in recording.interactions if i.path == self.path])

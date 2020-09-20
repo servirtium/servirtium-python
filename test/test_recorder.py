@@ -25,7 +25,7 @@ def test_something(mock_perform_request_on_real_service):
     servirtium_daemon = threading.Thread(target=recorder.start, daemon=True)
     servirtium_daemon.start()
 
-    recorder.RecorderHttpHandler.set_invoking_method("just_testing_ignore_me")
+    recorder.RecorderHttpHandler.set_markdown_filename("just_testing_ignore_me")
 
     rsp = requests.get("http://localhost:61417/abc/123")
 
