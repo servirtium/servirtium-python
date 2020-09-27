@@ -27,11 +27,11 @@
 #        of the authors and should not be interpreted as representing official policies,
 #        either expressed or implied, of the Servirtium project.
 import itertools
+import os
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import requests
-from definitions import MOCKS_DIR
 from interaction_recording import InteractionRecording
 from servirtium.interactions import Interaction
 
@@ -64,13 +64,18 @@ class Interception:
         return _prune_headers(response.headers, self.response_headers_to_remove)
 
     def real_service_host(self):
-        return self.host.replace('http://', '')
+        return self.host.replace('http://', '').replace('https://', '')
 
 
 # noinspection PyPep8Naming
 class RecorderHttpHandler(BaseHTTPRequestHandler):
     interception = Interception()
     markdown_filename = 'default_method'
+    mocks_dir = "/test/.mocks/"
+
+    @staticmethod
+    def set_mocks_dir(mocks_dir):
+        RecorderHttpHandler.mocks_dir = mocks_dir
 
     @staticmethod
     def set_markdown_filename(markdown_filename):
@@ -83,7 +88,16 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.process_request("\n")
 
+    def do_DELETE(self):
+        self.process_request("\n")
+
+    def do_OPTIONS(self):
+        self.process_request("\n")
+
     def do_POST(self):
+        self.process_request_with_body()
+
+    def do_PATCH(self):
         self.process_request_with_body()
 
     def process_request_with_body(self):
@@ -98,7 +112,19 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
 
         response = self.perform_request_on_real_service(new_req_headers, request_body)
         self.send_response(response.status_code)
+        ctt = str(response.content, 'utf-8').replace("https://todo-backend-sinatra.herokuapp.com", "http://localhost:61417") \
+            .replace("todo-backend-sinatra.herokuapp.com", "localhost:61417").encode("utf-8")
+
+        for name, value in sorted(response.headers.items()):
+            if name == "Content-Length":
+                value = str(len(ctt))
+
+            value = value.replace("https://todo-backend-sinatra.herokuapp.com", "http://localhost:61417")\
+                .replace("todo-backend-sinatra.herokuapp.com", "localhost:61417")
+
+            self.send_header(name, value)
         self.end_headers()
+        self.wfile.write(ctt)
         self.wfile.write(response.content)
         RecorderHttpHandler.interception.current_recording.add_interaction(
             Interaction(http_verb=self.command,
@@ -108,8 +134,15 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
                         response_headers=self.interception.modified_response_headers(response),
                         response_body=(str(response.content, encoding='utf-8')),
                         response_code=response.status_code))
-        f = open(MOCKS_DIR + RecorderHttpHandler.markdown_filename.replace("test_", '') + ".md", "w+")
-        f.write(RecorderHttpHandler.interception.current_recording.to_markdown_string())
+        try:
+            os.mkdir(RecorderHttpHandler.mocks_dir)
+        except FileExistsError:
+            pass
+
+        md_path = RecorderHttpHandler.mocks_dir + os.sep + RecorderHttpHandler.markdown_filename + ".md"
+        f = open(md_path, "w+")
+        markdown_string = RecorderHttpHandler.interception.current_recording.to_markdown_string()
+        f.write(markdown_string)
         f.close()
 
     def perform_request_on_real_service(self, new_req_headers, request_body):
@@ -121,6 +154,12 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
                                         headers=new_req_headers, data=request_body)
         return response
 
+
+def set_mocks_dir(mocks_dir):
+    RecorderHttpHandler.set_mocks_dir(mocks_dir)
+
+def set_markdown_filename(filename):
+    RecorderHttpHandler.set_markdown_filename(filename)
 
 def set_real_service(host):
     RecorderHttpHandler.interception.host = host

@@ -1,12 +1,12 @@
-import sys
 import os
-import signal
+import sys
+import threading
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
-import subprocess
 import time
 import servirtium.recorder as MockRecorder
 import servirtium.playback as MockPlaybacker
@@ -19,16 +19,16 @@ if len(sys.argv) > 1:
 
        # TODO check that ruby process is already started.
        url = "http://localhost:61417"
-       MockRecorder.set_markdown_filename(".")
-       MockRecorder.set_real_service(todoSuiteUrl)
-       MockRecorder.RecorderHttpHandler.set_markdown_filename("todobackend_test_suite")
+       MockRecorder.set_mocks_dir(os.getcwd())
+       MockRecorder.set_markdown_filename("todobackend_test_suite")
+       MockRecorder.set_real_service("https://todo-backend-sinatra.herokuapp.com")
        servirtium_daemon = threading.Thread(target=MockRecorder.start, daemon=True)
        servirtium_daemon.start()
    elif sys.argv[1] == "playback":
 
        url = "http://localhost:61417"
-       MockPlaybacker.set_markdown_filename(".")
-       MockPlaybacker.RecorderHttpHandler.set_markdown_filename("todobackend_test_suite")
+       MockRecorder.set_mocks_dir(os.getcwd())
+       MockPlaybacker.set_markdown_filename("todobackend_test_suite")
        servirtium_daemon = threading.Thread(target=MockPlaybacker.start, daemon=True)
        servirtium_daemon.start()
    elif sys.argv[1] == "direct":

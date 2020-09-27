@@ -39,7 +39,8 @@ class Interaction:
         self.request_headers = request_headers
         self.response_headers = response_headers
         self.response_body = response_body
-        self.response_type = response_headers['Content-Type']
+        if 'Content-Type' in response_headers:
+            self.response_type = response_headers['Content-Type']
         self.response_code = response_code
 
 

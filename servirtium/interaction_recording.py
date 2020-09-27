@@ -9,9 +9,11 @@ RESPONSE_HEADER_TITLE = 'Response headers recorded for playback:'
 class InteractionRecording:
     def __init__(self):
         self.interactions = []
+        self.last_interaction = {}
 
     def add_interaction(self, interaction: Interaction):
         self.interactions.append(interaction)
+        self.last_interaction = interaction
 
     def to_markdown_string(self) -> str:
         return '\n'.join(
@@ -27,7 +29,12 @@ def _as_markup(index, interaction) -> Markup:
 
 
 def _response_body_title(interaction: Interaction):
-    return f"Response body recorded for playback ({interaction.response_code}: {interaction.response_type}):"
+
+    attr = ""
+    if hasattr(interaction, 'response_type'):
+        attr = interaction.response_type
+
+    return f"Response body recorded for playback ({interaction.response_code}: {attr}):"
 
 
 def _headers_to_string(headers: {}):
