@@ -20,6 +20,7 @@ if len(sys.argv) > 1:
        # TODO check that ruby process is already started.
        url = "http://localhost:61417"
        MockRecorder.set_mocks_dir(os.getcwd())
+       MockRecorder.pretty_print_json_or_xml()
        MockRecorder.set_markdown_filename("todobackend_test_suite")
        MockRecorder.set_real_service("https://todo-backend-sinatra.herokuapp.com")
        servirtium_daemon = threading.Thread(target=MockRecorder.start, daemon=True)

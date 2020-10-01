@@ -8,16 +8,15 @@ RESPONSE_HEADER_TITLE = 'Response headers recorded for playback:'
 
 class InteractionRecording:
     def __init__(self):
-        self.interactions = []
+        self.interaction_num = -1
         self.last_interaction = {}
 
     def add_interaction(self, interaction: Interaction):
-        self.interactions.append(interaction)
+        self.interaction_num = self.interaction_num + 1
         self.last_interaction = interaction
 
-    def to_markdown_string(self) -> str:
-        return '\n'.join(
-            [_as_markup(ix, interaction).as_markdown() for ix, interaction in enumerate(self.interactions)])
+    def last_interaction_to_markdown_string(self) -> str:
+        return _as_markup(self.interaction_num, self.last_interaction).as_markdown()
 
 
 def _as_markup(index, interaction) -> Markup:

@@ -27,9 +27,13 @@
 #        of the authors and should not be interpreted as representing official policies,
 #        either expressed or implied, of the Servirtium project.
 import itertools
+import json
 import os
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from json import JSONDecodeError
+from pyexpat import ExpatError
+from xml.dom import minidom
 
 import requests
 from interaction_recording import InteractionRecording
@@ -71,7 +75,12 @@ class Interception:
 class RecorderHttpHandler(BaseHTTPRequestHandler):
     interception = Interception()
     markdown_filename = 'default_method'
-    mocks_dir = "/test/.mocks/"
+    mocks_dir = os.getcwd()
+    pretty = False
+
+    @staticmethod
+    def pretty_print_json_or_xml():
+        RecorderHttpHandler.pretty = True
 
     @staticmethod
     def set_mocks_dir(mocks_dir):
@@ -81,6 +90,8 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
     def set_markdown_filename(markdown_filename):
         RecorderHttpHandler.markdown_filename = markdown_filename
         RecorderHttpHandler.current_recording = InteractionRecording()
+        md_path = RecorderHttpHandler.mocks_dir + os.sep + RecorderHttpHandler.markdown_filename + ".md"
+        os.remove(md_path)
 
     # TODO - should override handle() of http.server
     #        instead of do_GET() of BaseHTTPRequestHandler
@@ -101,12 +112,31 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
         self.process_request_with_body()
 
     def process_request_with_body(self):
-        self.process_request(self.rfile.read(int(self.headers['Content-Length'])))
+        l = int(self.headers['Content-Length'])
+        r = self.rfile.read(l)
+        print("r typ " + str(type(r)))
+        self.process_request(r.decode("utf-8"))
 
     def do_PUT(self):
         self.process_request_with_body()
 
+
+    def prettifyXML(self, xml_string):
+        return minidom.parseString(xml_string).toprettyxml(indent="  ")
+
     def process_request(self, request_body):
+        if RecorderHttpHandler.pretty and len(request_body) > 1:
+            print("request_body>" + request_body + "<")
+            try:
+                request_body = json.dumps(json.loads(request_body), indent=2)
+            except JSONDecodeError:
+                pass
+
+            try:
+                request_body = self.prettifyXML(request_body)
+            except ExpatError:
+                pass
+
         new_req_headers = dict(self.headers.items())
         new_req_headers.update({'Host': self.interception.real_service_host()})
 
@@ -126,13 +156,19 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(ctt)
         self.wfile.write(response.content)
+        rsp_body = str(response.content, encoding='utf-8')
+        if RecorderHttpHandler.pretty and len(rsp_body) > 1:
+            try:
+                rsp_body = json.dumps(json.loads(rsp_body), indent=2)
+            except JSONDecodeError:
+                pass
         RecorderHttpHandler.interception.current_recording.add_interaction(
             Interaction(http_verb=self.command,
                         request_headers=self.interception.modified_request_headers(new_req_headers),
                         request_body=request_body,
                         request_path=self.path,
                         response_headers=self.interception.modified_response_headers(response),
-                        response_body=(str(response.content, encoding='utf-8')),
+                        response_body= rsp_body,
                         response_code=response.status_code))
         try:
             os.mkdir(RecorderHttpHandler.mocks_dir)
@@ -140,9 +176,8 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
             pass
 
         md_path = RecorderHttpHandler.mocks_dir + os.sep + RecorderHttpHandler.markdown_filename + ".md"
-        f = open(md_path, "w+")
-        markdown_string = RecorderHttpHandler.interception.current_recording.to_markdown_string()
-        f.write(markdown_string)
+        f = open(md_path, "a")
+        f.write(RecorderHttpHandler.interception.current_recording.last_interaction_to_markdown_string())
         f.close()
 
     def perform_request_on_real_service(self, new_req_headers, request_body):
@@ -164,6 +199,8 @@ def set_markdown_filename(filename):
 def set_real_service(host):
     RecorderHttpHandler.interception.host = host
 
+def pretty_print_json_or_xml():
+    RecorderHttpHandler.pretty_print_json_or_xml()
 
 def set_request_header_replacements(replacements):
     RecorderHttpHandler.interception.request_header_overrides = replacements
