@@ -2,7 +2,7 @@ import threading
 from unittest.mock import patch
 
 import requests
-import recorder
+from servirtium import recorder
 from definitions import MOCKS_DIR
 
 

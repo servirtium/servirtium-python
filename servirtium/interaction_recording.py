@@ -1,5 +1,5 @@
-from interactions import Interaction
-from markup import Markup
+from servirtium.interactions import Interaction
+from servirtium.markup import Markup
 
 REQ_HEADER_TITLE = 'Request headers recorded for playback:'
 REQ_BODY_TITLE = 'Request body recorded for playback ():'
