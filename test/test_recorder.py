@@ -2,11 +2,11 @@ import threading
 from unittest.mock import patch
 
 import requests
-import recorder
+from servirtium import recorder
 from definitions import MOCKS_DIR
 
 
-@patch('recorder.RecorderHttpHandler.perform_request_on_real_service')
+@patch('servirtium.recorder.RecorderHttpHandler.perform_request_on_real_service')
 def test_something(mock_perform_request_on_real_service):
     mock_perform_request_on_real_service.return_value = AttrDict({
         "status_code": 200,

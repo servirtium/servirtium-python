@@ -1,4 +1,4 @@
-from markup import Markup
+from servirtium.markup import Markup
 
 
 def test_renders_code_block():

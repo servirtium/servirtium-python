@@ -36,7 +36,7 @@ from pyexpat import ExpatError
 from xml.dom import minidom
 
 import requests
-from interaction_recording import InteractionRecording
+from servirtium.interaction_recording import InteractionRecording
 from servirtium.interactions import Interaction
 
 
@@ -91,7 +91,8 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
         RecorderHttpHandler.markdown_filename = markdown_filename
         RecorderHttpHandler.current_recording = InteractionRecording()
         md_path = RecorderHttpHandler.mocks_dir + os.sep + RecorderHttpHandler.markdown_filename + ".md"
-        os.remove(md_path)
+        if os.path.exists(md_path):
+            os.remove(md_path)
 
     # TODO - should override handle() of http.server
     #        instead of do_GET() of BaseHTTPRequestHandler
@@ -154,7 +155,6 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
 
             self.send_header(name, value)
         self.end_headers()
-        self.wfile.write(ctt)
         self.wfile.write(response.content)
         rsp_body = str(response.content, encoding='utf-8')
         if RecorderHttpHandler.pretty and len(rsp_body) > 1:
