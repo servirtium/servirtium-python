@@ -155,7 +155,6 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
 
             self.send_header(name, value)
         self.end_headers()
-        self.wfile.write(ctt)
         self.wfile.write(response.content)
         rsp_body = str(response.content, encoding='utf-8')
         if RecorderHttpHandler.pretty and len(rsp_body) > 1:
