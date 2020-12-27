@@ -6,16 +6,7 @@ from servirtium import recorder
 from definitions import MOCKS_DIR
 
 
-@patch('servirtium.recorder.RecorderHttpHandler.perform_request_on_real_service')
-def test_something(mock_perform_request_on_real_service):
-    mock_perform_request_on_real_service.return_value = AttrDict({
-        "status_code": 200,
-        "content": str.encode("something wonderful has happened", encoding="utf-8"),
-        "headers": {
-            "Content-Type": "text/plain",
-            "a": "1"
-        }
-    })
+def test_something():
     # servirtium_site = "http://localhost:61417"
 
     recorder.set_real_service('http://climatedataapi.worldbank.org')
@@ -27,7 +18,7 @@ def test_something(mock_perform_request_on_real_service):
 
     recorder.RecorderHttpHandler.set_markdown_filename("just_testing_ignore_me")
 
-    rsp = requests.get("http://localhost:61417/abc/123")
+    rsp = requests.get('http://localhost:61417/climateweb/rest/v1/country/annualavg/pr/1980/1999/fra.xml')
 
     assert rsp.content.decode(encoding="utf-8") == "something wonderful has happened"
 
