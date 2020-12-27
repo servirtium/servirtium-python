@@ -47,7 +47,11 @@ class MockServiceHttpHandler(BaseHTTPRequestHandler):
         recording = parser.get_recording_from_method_name(MockServiceHttpHandler.markdown_filename)
 
         if parser.is_valid_path(self.path) and recording:
-            interaction = next([i for i in recording.interactions if i.path == self.path])
+            interaction = next(iter([i for i in recording.interactions if i.path == self.path]))
+            if not interaction:
+                self.send_error(HTTPStatus.NOT_FOUND, f"Unknown {self.path} path")
+                return
+
             request_headers = headers_from(str(self.headers).strip())
 
             if interaction.request_headers == request_headers or True:  # Headers currently don't match
