@@ -153,6 +153,7 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
                 .replace("todo-backend-sinatra.herokuapp.com", "localhost:61417")
 
             if name != 'Transfer-Encoding':  # skip Transfer-Encoding as we are setting Content-Length
+                # TODO: add support for Transfer-Encoding = chunked
                 self.send_header(name, value)
 
         self.end_headers()
