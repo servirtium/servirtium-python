@@ -146,14 +146,16 @@ class RecorderHttpHandler(BaseHTTPRequestHandler):
         ctt = str(response.content, 'utf-8').replace("https://todo-backend-sinatra.herokuapp.com", "http://localhost:61417") \
             .replace("todo-backend-sinatra.herokuapp.com", "localhost:61417").encode("utf-8")
 
+        # Always send Content-Length header and skip Transfer-Encoding header as the response is not chunked
+        self.send_header("Content-Length", str(len(ctt)))
         for name, value in sorted(response.headers.items()):
-            if name == "Content-Length":
-                value = str(len(ctt))
-
             value = value.replace("https://todo-backend-sinatra.herokuapp.com", "http://localhost:61417")\
                 .replace("todo-backend-sinatra.herokuapp.com", "localhost:61417")
 
-            self.send_header(name, value)
+            if name != 'Transfer-Encoding':  # skip Transfer-Encoding as we are setting Content-Length
+                # TODO: add support for Transfer-Encoding = chunked
+                self.send_header(name, value)
+
         self.end_headers()
         self.wfile.write(response.content)
         rsp_body = str(response.content, encoding='utf-8')
