@@ -10,11 +10,11 @@ Demo project that uses it: https://github.com/servirtium/demo-python-climate-dat
 
 Working so far:
 
-* Record and playback of GET
+* Record and playback of GET/POST/PUT
 
 Not Working yet:
 
-* Support for POST, PUT etc.
+* Support for "Transfer-Encoding" header for "chunked" response
 
 Help needed from Pythonistas!
 
@@ -26,6 +26,11 @@ Execute the following commands to install the package locally:
 pip3 install requests
 cd servirtium-python
 pip3 install -e .
+```
+
+OR install it from https://pypi.org/ using following:
+```
+pip3 install servirtium
 ```
 
 The 'demo-python-climate-data-tck' demo needs you to have built the Python version of Servirtium 
