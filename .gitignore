@@ -13,3 +13,6 @@ test/.mocks/
 *.iml
 
 test/just_testing_ignore_me.md
+
+build/
+dist/
